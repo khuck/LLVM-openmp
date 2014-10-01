@@ -34,9 +34,11 @@ typedef struct ompt_callbacks_s {
 
 
 typedef struct {
-    ompt_frame_t        frame;
-    void*               function;
-    ompt_task_id_t      task_id;
+    ompt_frame_t            frame;
+    void*                   function;
+    ompt_task_id_t          task_id;
+    ompt_target_id_t        target_id;
+    ompt_target_data_id_t   target_data_id;
 } ompt_task_info_t;
 
 

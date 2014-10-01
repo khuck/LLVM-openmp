@@ -372,3 +372,16 @@ __ompt_get_runtime_version_internal()
 {
     return &__kmp_version_lib_ver[KMP_VERSION_MAGIC_LEN];
 }
+
+
+ompt_target_id_t __ompt_target_id_new()
+{
+    static uint64_t ompt_target_id = 1;
+    return NEXT_ID(&ompt_target_id, 0);
+}
+
+ompt_target_data_id_t __ompt_target_data_id_new()
+{
+    static uint64_t ompt_target_data_id = 1;
+    return NEXT_ID(&ompt_target_data_id, 0);
+}
