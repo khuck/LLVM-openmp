@@ -392,6 +392,7 @@ ompt_data_map_id_t __ompt_data_map_id_new()
 // force initialization of the OpenMP library.
 // TODO: Really force initialization like that?
 void __ompt_initialize_openmp_runtime() {
+    // FIXME: We better should check if ompt_init() was called before
     static bool omp_init = false;
     if (omp_init == false) {
         __kmp_get_global_thread_id_reg();
