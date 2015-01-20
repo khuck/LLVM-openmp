@@ -52,4 +52,6 @@ ompt_target_id_t __ompt_target_id_new();
 
 ompt_data_map_id_t __ompt_data_map_id_new();
 
+void __ompt_initialize_openmp_runtime();
+
 #endif
