@@ -152,6 +152,10 @@ __ompt_init_internal()
             }
             root_thread->th.ompt_thread_info.state = ompt_state_work_serial;
         }
+        
+        // init target stuff
+        root_thread->th.ompt_target_info.target_data_id = 0;
+        root_thread->th.ompt_target_info.is_target_data = 1;
     }
 }
 
@@ -398,4 +402,9 @@ void __ompt_initialize_openmp_runtime() {
         __kmp_get_global_thread_id_reg();
         omp_init = true;
     }
+}
+
+ompt_target_info_t* __ompt_get_target_info() {
+    kmp_info_t  *root_thread = ompt_get_thread();
+    return &(root_thread->th.ompt_target_info);
 }

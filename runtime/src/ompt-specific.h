@@ -54,4 +54,6 @@ ompt_data_map_id_t __ompt_data_map_id_new();
 
 void __ompt_initialize_openmp_runtime();
 
+ompt_target_info_t* __ompt_get_target_info();
+
 #endif

@@ -2208,6 +2208,7 @@ typedef struct KMP_ALIGN_CACHE kmp_base_info {
 
 #if OMPT_SUPPORT
     ompt_thread_info_t      ompt_thread_info;
+    ompt_target_info_t      ompt_target_info;
 #endif
 
 /* The following are also read by the master during reinit */
