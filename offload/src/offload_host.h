@@ -25,6 +25,11 @@
 #include "offload_orsl.h"
 #include "coi/coi_client.h"
 
+#if OMPT_SUPPORT
+#include "ompt-specific.h"
+#include "ompt-internal.h"
+#endif 
+
 // MIC engines.
 extern Engine*  mic_engines;
 extern uint32_t mic_engines_total;
@@ -259,6 +264,13 @@ private:
     // a boolean value calculated in setup_descriptors. If true we need to do
     // a run function on the target. Otherwise it may be optimized away.
     bool m_need_runfunction;
+
+#ifdef OMPT_SUPPORT
+    // a boolean value to identify a omp target region
+    bool m_need_runuserfunction;
+    ompt_target_id_t target_id;
+#endif
+
 };
 
 // Initialization types for MIC

@@ -533,7 +533,7 @@ void OffloadDescriptor::scatter_copyin_data()
                 abort();
         }
     }
-
+printf("__USE OWN LIBOFFLOAD ON MIC__\n");
     OFFLOAD_TRACE(1, "Total copyin data received from host: [%lld] bytes\n",
                   m_in.get_tfr_size());
 

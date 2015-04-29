@@ -35,6 +35,9 @@ obj_host_dir=$(build_dir)/obj_host
 obj_target_dir=$(build_dir)/obj_target
 source_dir=$(root_dir)/src
 imported_dir=$(source_dir)/imported
+runtime_dir=../runtime
+runtime_source_dir=$(runtime_dir)/src
+runtime_build_dir=$(runtime_dir)/build
 
 # OS
 os_host?=linux
@@ -102,7 +105,7 @@ obj_ofld_host=$(foreach file,$(obj_ofld),$(build_host_dir)/$(file))
 obj_ofld_target=$(foreach file,$(obj_ofld),$(build_target_dir)/$(file))
 
 # Options
-opts_common=-O2 -w -fpic -c -DCOI_LIBRARY_VERSION=2 -DMYO_SUPPORT -DOFFLOAD_DEBUG=1 -DSEP_SUPPORT -DTIMING_SUPPORT -I$(coi_include) -I$(myo_dir)/include -I$(source_dir)
+opts_common=-O2 -w -fpic -c -DCOI_LIBRARY_VERSION=2 -DMYO_SUPPORT -DOFFLOAD_DEBUG=1 -DSEP_SUPPORT -DTIMING_SUPPORT -I$(coi_include) -I$(myo_dir)/include -I$(source_dir) -I$(runtime_source_dir) -I$(runtime_build_dir) -Qoption,cpp,--extended_float_types
 ifneq ($(omp_header_dir), )
   opts_common+=-I$(imported_dir)
 endif
@@ -123,12 +126,14 @@ options_host?=
 opts_host=$(options_host) -DHOST_LIBRARY=1 -DMPSS_VERSION=$(mpss_version)
 ifeq ($(os_host), linux)
   opts_host+=-DLINUX
+  opts_host+=-DOMPT_SUPPORT
 endif
 
 options_target?=
 opts_target=$(options_target) -DHOST_LIBRARY=0
 ifeq ($(os_target), linux)
   opts_target+=-DLINUX
+  opts_target+=-DOMPT_SUPPORT
 endif
 ifeq ($(compiler_target), icc)
   opts_target+=-mmic

@@ -134,7 +134,6 @@ static void offload_init()
     __offload_register_tables(&__offload_entry_node,
                               &__offload_func_node,
                               &__offload_var_node);
-
 #if HOST_LIBRARY
     __offload_register_image(&__offload_target_image);
     atexit(offload_fini);

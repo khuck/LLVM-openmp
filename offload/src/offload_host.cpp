@@ -34,6 +34,7 @@ static void __offload_fini_library(void);
 #include <algorithm>
 #include <bitset>
 
+
 #if defined(HOST_WINNT)
 #define PATH_SEPARATOR ";"
 #else
@@ -2087,6 +2088,38 @@ bool OffloadDescriptor::offload(
     const void *stack_addr
 )
 {
+
+
+#if OMPT_SUPPORT
+   ompt_target_device_id_t device_id;
+   ompt_task_id_t task_id;
+   int tid; 
+   if (ompt_status == ompt_status_track_callback) {
+     
+     if (ompt_callbacks.ompt_callback(ompt_event_target_begin) && !is_empty ) {
+       target_id = __ompt_target_id_new();
+       device_id = m_device.get_logical_index();
+       task_id = __ompt_get_task_id_internal(0);
+       ompt_callbacks.ompt_callback(ompt_event_target_begin)(task_id,
+                                       target_id,
+                                       device_id,
+                                       0);//m_device.m_funcs[Engine::c_func_compute]); //FIXME 
+     }
+
+     //FIXME: We get this callback for target data and target update.
+     if (ompt_callbacks.ompt_callback(ompt_event_target_update_begin) && is_empty ) {
+       target_id = __ompt_target_id_new();
+       device_id = m_device.get_logical_index();
+       task_id = __ompt_get_task_id_internal(0);
+       ompt_callbacks.ompt_callback(ompt_event_target_update_begin)(task_id,
+                                       target_id,
+                                       device_id,
+                                       0);//m_device.m_funcs[Engine::c_func_compute]); //FIXME 
+     }
+
+   }
+#endif
+
     if (signal == 0) {
         OFFLOAD_DEBUG_TRACE_1(1,
                       GET_OFFLOAD_NUMBER(get_timer_data()),
@@ -2124,6 +2157,7 @@ bool OffloadDescriptor::offload(
     }
 
     m_need_runfunction = !is_empty;
+    m_need_runuserfunction = !is_empty;
 
     // wait for dependencies to finish
     if (!wait_dependencies(waits, num_waits)) {
@@ -2180,6 +2214,25 @@ bool OffloadDescriptor::offload(
     }
 
     cleanup();
+
+#if OMPT_SUPPORT
+   if (ompt_status == ompt_status_track_callback) {
+     
+     if (ompt_callbacks.ompt_callback(ompt_event_target_end) && !is_empty) {
+       ompt_callbacks.ompt_callback(ompt_event_target_end)(task_id,
+                                       target_id);
+     }
+
+     //FIXME: We get this callback for target data and target update.
+     if (ompt_callbacks.ompt_callback(ompt_event_target_update_end) && is_empty) {
+       ompt_callbacks.ompt_callback(ompt_event_target_update_end)(task_id,
+                                       target_id);
+     }
+
+   }
+#endif
+
+
     return true;
 }
 
@@ -2424,6 +2477,24 @@ bool OffloadDescriptor::send_pointer_data(bool is_async)
     uint64_t ptr_sent = 0;
     COIRESULT res;
 
+    #ifdef OMPT_SUPPORT
+    ompt_data_map_id_t data_map_id;
+    ompt_target_device_id_t device_id;
+    ompt_task_id_t task_id;
+    ompt_target_sync_t sync_type;
+
+    if (ompt_status == ompt_status_track_callback) {
+      if (ompt_callbacks.ompt_callback(ompt_event_data_map_begin)) {
+        device_id = m_device.get_logical_index();
+        task_id = __ompt_get_task_id_internal(0);
+        if (is_async)
+           sync_type = ompt_data_async;
+        else
+           sync_type = ompt_data_sync;
+      }
+    }
+    #endif
+
     // Initiate send for pointer data
     for (int i = 0; i < m_vars_total; i++) {
         switch (m_vars[i].type.dst) {
@@ -2434,6 +2505,24 @@ bool OffloadDescriptor::send_pointer_data(bool is_async)
             case c_cean_var:
                 if (m_vars[i].direction.in &&
                     m_vars[i].flags.is_static_dstn) {
+
+                    //TODO: What happens if data transfer fails?
+                    #ifdef OMPT_SUPPORT                    
+                    if (ompt_status == ompt_status_track_callback) {
+                      if (ompt_callbacks.ompt_callback(ompt_event_data_map_begin)) {
+                        data_map_id = __ompt_data_map_id_new();
+                        ompt_callbacks.ompt_callback(ompt_event_data_map_begin)(
+                                       task_id,
+                                       target_id,
+                                       data_map_id,
+                                       device_id,
+                                       sync_type,
+                                       ompt_data_map_IN, 
+                                       m_vars[i].size); 
+                      }
+                    }
+                    #endif
+
                     COIEVENT *event =
                         (is_async ||
                          m_vars[i].size >= __offload_use_async_buffer_write) ?
@@ -2495,6 +2584,18 @@ bool OffloadDescriptor::send_pointer_data(bool is_async)
                         }
                     }
                     ptr_sent += m_vars[i].size;
+
+                    #ifdef OMPT_SUPPORT                    
+                    if (ompt_status == ompt_status_track_callback) {
+                      if (ompt_callbacks.ompt_callback(ompt_event_data_map_end)) {
+                        ompt_callbacks.ompt_callback(ompt_event_data_map_end)(
+                                       task_id,
+                                       target_id,
+                                       data_map_id);
+                      }
+                    }
+                    #endif
+
                 }
                 break;
 
@@ -2503,6 +2604,24 @@ bool OffloadDescriptor::send_pointer_data(bool is_async)
             case c_cean_var_ptr:
             case c_dv_ptr:
                 if (m_vars[i].direction.in && m_vars[i].size > 0) {
+
+                    //TODO: What happens if data transfer fails?
+                    #ifdef OMPT_SUPPORT                    
+                    if (ompt_status == ompt_status_track_callback) {
+                      if (ompt_callbacks.ompt_callback(ompt_event_data_map_begin)) {
+                        data_map_id = __ompt_data_map_id_new();
+                        ompt_callbacks.ompt_callback(ompt_event_data_map_begin)(
+                                       task_id,
+                                       target_id,
+                                       data_map_id,
+                                       device_id,
+                                       sync_type,
+                                       ompt_data_map_IN,
+                                       m_vars[i].size);
+                      }
+                    }
+                    #endif
+
                     COIEVENT *event =
                         (is_async ||
                          m_vars[i].size >= __offload_use_async_buffer_write) ?
@@ -2563,6 +2682,18 @@ bool OffloadDescriptor::send_pointer_data(bool is_async)
                     }
 
                     ptr_sent += m_vars[i].size;
+
+                    #ifdef OMPT_SUPPORT                    
+                    if (ompt_status == ompt_status_track_callback) {
+                      if (ompt_callbacks.ompt_callback(ompt_event_data_map_end)) {
+                        ompt_callbacks.ompt_callback(ompt_event_data_map_end)(
+                                       task_id,
+                                       target_id,
+                                       data_map_id);
+                      }
+                    }
+                    #endif
+
                 }
                 break;
 
@@ -2570,6 +2701,24 @@ bool OffloadDescriptor::send_pointer_data(bool is_async)
             case c_dv_ptr_data:
                 if (m_vars[i].direction.in &&
                     m_vars[i].size > 0) {
+
+                    //TODO: What happens if data transfer fails?
+                    #ifdef OMPT_SUPPORT                    
+                    if (ompt_status == ompt_status_track_callback) {
+                      if (ompt_callbacks.ompt_callback(ompt_event_data_map_begin)) {
+                        data_map_id = __ompt_data_map_id_new();
+                        ompt_callbacks.ompt_callback(ompt_event_data_map_begin)(
+                                       task_id,
+                                       target_id,
+                                       data_map_id,
+                                       device_id,
+                                       sync_type,
+                                       ompt_data_map_IN,
+                                       m_vars[i].size);
+                      }
+                    }
+                    #endif
+
                     PtrData *ptr_data = m_vars[i].into ?
                                         m_vars_extra[i].dst_data :
                                         m_vars_extra[i].src_data;
@@ -2627,6 +2776,18 @@ bool OffloadDescriptor::send_pointer_data(bool is_async)
                         }
                     }
                     ptr_sent += m_vars[i].size;
+
+                    #ifdef OMPT_SUPPORT                    
+                    if (ompt_status == ompt_status_track_callback) {
+                      if (ompt_callbacks.ompt_callback(ompt_event_data_map_end)) {
+                        ompt_callbacks.ompt_callback(ompt_event_data_map_end)(
+                                       task_id,
+                                       target_id,
+                                       data_map_id);
+                      }
+                    }
+                    #endif
+
                 }
                 break;
 
@@ -2634,6 +2795,24 @@ bool OffloadDescriptor::send_pointer_data(bool is_async)
             case c_dv_ptr_data_slice:
                 if (m_vars[i].direction.in &&
                     m_vars[i].size > 0) {
+
+                    //TODO: What happens if data transfer fails?
+                    #ifdef OMPT_SUPPORT                    
+                    if (ompt_status == ompt_status_track_callback) {
+                      if (ompt_callbacks.ompt_callback(ompt_event_data_map_begin)) {
+                        data_map_id = __ompt_data_map_id_new();
+                        ompt_callbacks.ompt_callback(ompt_event_data_map_begin)(
+                                       task_id,
+                                       target_id,
+                                       data_map_id,
+                                       device_id,
+                                       sync_type,
+                                       ompt_data_map_IN,
+                                       m_vars[i].size);
+                      }
+                    }
+                    #endif
+
                     PtrData *dst_data = m_vars[i].into ?
                                         m_vars_extra[i].dst_data :
                                         m_vars_extra[i].src_data;
@@ -2696,6 +2875,18 @@ bool OffloadDescriptor::send_pointer_data(bool is_async)
                     }
 
                     ptr_sent += m_vars[i].size;
+
+                    #ifdef OMPT_SUPPORT                    
+                    if (ompt_status == ompt_status_track_callback) {
+                      if (ompt_callbacks.ompt_callback(ompt_event_data_map_end)) {
+                        ompt_callbacks.ompt_callback(ompt_event_data_map_end)(
+                                       task_id,
+                                       target_id,
+                                       data_map_id);
+                      }
+                    }
+                    #endif
+
                 }
                 break;
 
@@ -2891,6 +3082,24 @@ bool OffloadDescriptor::compute()
             }
         }
 
+#if OMPT_SUPPORT
+    ompt_target_device_id_t device_id;
+    ompt_task_id_t task_id;
+    if (ompt_status == ompt_status_track_callback) {
+     
+        if (ompt_callbacks.ompt_callback(ompt_event_target_invoke_begin) && m_need_runuserfunction) {
+            device_id = m_device.get_logical_index();
+            task_id = __ompt_get_task_id_internal(0);
+            ompt_callbacks.ompt_callback(ompt_event_target_invoke_begin)(task_id,
+                                         target_id,
+                                         device_id,
+                                         0);//m_device.m_funcs[Engine::c_func_compute]); //FIXME 
+        }
+
+    }
+#endif
+
+
         // dispatch task
         COIRESULT res;
         COIEVENT event;
@@ -2900,6 +3109,18 @@ bool OffloadDescriptor::compute()
                                m_in_deps_total,
                                m_in_deps_total > 0 ? m_in_deps : 0,
                                &event);
+
+#if OMPT_SUPPORT
+    if (ompt_status == ompt_status_track_callback) {
+     
+        if (ompt_callbacks.ompt_callback(ompt_event_target_invoke_end) && m_need_runuserfunction) {
+            device_id = m_device.get_logical_index();
+            task_id = __ompt_get_task_id_internal(0);
+            ompt_callbacks.ompt_callback(ompt_event_target_invoke_end)(task_id, target_id);
+        }
+
+    }
+#endif
         if (res != COI_SUCCESS) {
             if (m_status != 0) {
                 m_status->result = translate_coi_error(res);
@@ -3054,6 +3275,25 @@ bool OffloadDescriptor::receive_pointer_data(bool is_async)
     uint64_t ptr_received = 0;
     COIRESULT res;
 
+     #ifdef OMPT_SUPPORT
+     ompt_data_map_id_t data_map_id;
+     ompt_target_device_id_t device_id;
+     ompt_task_id_t task_id;
+     ompt_target_sync_t sync_type;
+ 
+     if (ompt_status == ompt_status_track_callback) {
+      if (ompt_callbacks.ompt_callback(ompt_event_data_map_begin)) {
+         device_id = m_device.get_logical_index();
+          task_id = __ompt_get_task_id_internal(0);
+         if (is_async)
+            sync_type = ompt_data_async;
+         else
+            sync_type = ompt_data_sync;
+        }
+     }
+     #endif
+
+
     for (int i = 0; i < m_vars_total; i++) {
         switch (m_vars[i].type.src) {
             case c_data_ptr_array:
@@ -3063,6 +3303,24 @@ bool OffloadDescriptor::receive_pointer_data(bool is_async)
             case c_cean_var:
                 if (m_vars[i].direction.out &&
                     m_vars[i].flags.is_static) {
+
+                    //TODO: What happens if data transfer fails?
+                    #ifdef OMPT_SUPPORT                    
+                    if (ompt_status == ompt_status_track_callback) {
+                      if (ompt_callbacks.ompt_callback(ompt_event_data_map_begin)) {
+                        data_map_id = __ompt_data_map_id_new();
+                        ompt_callbacks.ompt_callback(ompt_event_data_map_begin)(
+                                       task_id,
+                                       target_id,
+                                       data_map_id,
+                                       device_id,
+                                       sync_type,
+                                       ompt_data_map_OUT, 
+                                       m_vars[i].size); 
+                      }
+                    }
+                    #endif
+
                     COIEVENT *event =
                         (is_async ||
                          m_in_deps_total > 0 ||
@@ -3138,7 +3396,20 @@ bool OffloadDescriptor::receive_pointer_data(bool is_async)
                         }
                     }
                     ptr_received += m_vars[i].size;
+
+                    #ifdef OMPT_SUPPORT                    
+                    if (ompt_status == ompt_status_track_callback) {
+                      if (ompt_callbacks.ompt_callback(ompt_event_data_map_end)) {
+                        ompt_callbacks.ompt_callback(ompt_event_data_map_end)(
+                                       task_id,
+                                       target_id,
+                                       data_map_id);
+                      }
+                    }
+                    #endif
+
                 }
+
                 break;
 
             case c_string_ptr:
@@ -3151,6 +3422,24 @@ bool OffloadDescriptor::receive_pointer_data(bool is_async)
             case c_dv_ptr: {
                 COIBUFFER dst_buf = NULL; // buffer on host
                 if (m_vars[i].direction.out && m_vars[i].size > 0) {
+
+                    //TODO: What happens if data transfer fails?
+                    #ifdef OMPT_SUPPORT                    
+                    if (ompt_status == ompt_status_track_callback) {
+                      if (ompt_callbacks.ompt_callback(ompt_event_data_map_begin)) {
+                        data_map_id = __ompt_data_map_id_new();
+                        ompt_callbacks.ompt_callback(ompt_event_data_map_begin)(
+                                       task_id,
+                                       target_id,
+                                       data_map_id,
+                                       device_id,
+                                       sync_type,
+                                       ompt_data_map_OUT, 
+                                       m_vars[i].size); 
+                      }
+                    }
+                    #endif
+
                     COIEVENT *event =
                         (is_async ||
                          m_in_deps_total > 0 ||
@@ -3254,7 +3543,19 @@ bool OffloadDescriptor::receive_pointer_data(bool is_async)
                         }
                     }
                     ptr_received += m_vars[i].size;
+
+                    #ifdef OMPT_SUPPORT                    
+                    if (ompt_status == ompt_status_track_callback) {
+                      if (ompt_callbacks.ompt_callback(ompt_event_data_map_end)) {
+                        ompt_callbacks.ompt_callback(ompt_event_data_map_end)(
+                                       task_id,
+                                       target_id,
+                                       data_map_id);
+                      }
+                    }
+                    #endif
                 }
+
                 break;
             }
 
