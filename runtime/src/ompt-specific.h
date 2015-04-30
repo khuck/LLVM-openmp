@@ -2,6 +2,7 @@
 #define OMPT_SPECIFIC_H
 
 #include "kmp.h"
+#include "ompt-target-specific.h"
 
 void *__ompt_get_team(int depth, int *tid_p);
 
@@ -44,16 +45,6 @@ void __ompt_thread_end(ompt_thread_type_t thread_type, int gtid);
 
 int __ompt_get_parallel_team_size_internal(int ancestor_level);
 
-ompt_task_id_t __ompt_get_task_id_internal(int depth);
-
 ompt_frame_t *__ompt_get_task_frame_internal(int depth);
-
-ompt_target_id_t __ompt_target_id_new();
-
-ompt_data_map_id_t __ompt_data_map_id_new();
-
-void __ompt_initialize_openmp_runtime();
-
-ompt_target_info_t* __ompt_get_target_info();
 
 #endif

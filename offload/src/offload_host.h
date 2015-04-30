@@ -26,7 +26,7 @@
 #include "coi/coi_client.h"
 
 #if OMPT_SUPPORT
-#include "ompt-specific.h"
+#include "ompt-target-specific.h"
 #include "ompt-internal.h"
 #endif 
 
