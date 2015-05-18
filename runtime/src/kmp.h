@@ -13,7 +13,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#define ATEST FORMAILINGLIST
 
 #ifndef KMP_H
 #define KMP_H
