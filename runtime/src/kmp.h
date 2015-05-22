@@ -1660,7 +1660,7 @@ typedef struct KMP_ALIGN_CACHE kmp_bstate {
     kmp_uint32 *skip_per_level;
     kmp_uint32 my_level;
     kmp_int32 parent_tid;
-    kmp_uint32 old_tid;
+    kmp_int32 old_tid;
     kmp_uint32 depth;
     struct kmp_bstate *parent_bar;
     kmp_team_t *team;
