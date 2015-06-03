@@ -226,8 +226,10 @@ info:
 	@echo "options_host = $(options_host)"
 	@echo "options_target = $(options_target)"
 
-install: $(build_host_dir)/liboffload.so $(build_target_dir)/liboffload.so
+install: $(build_host_dir)/liboffload.so $(build_host_dir)/liboffload.so.5 $(build_target_dir)/liboffload.so $(build_target_dir)/liboffload.so.5
 	mkdir -p $(install_dir)/lib/intel64
 	mkdir -p $(install_dir)/lib/mic
-	cp $(build_host_dir)/liboffload.so $(install_dir)/lib/intel64
 	cp $(build_target_dir)/liboffload.so $(install_dir)/lib/mic
+	cp $(build_target_dir)/liboffload.so.5 $(install_dir)/lib/mic
+	cp $(build_host_dir)/liboffload.so $(install_dir)/lib/intel64
+	cp $(build_host_dir)/liboffload.so.5 $(install_dir)/lib/intel64
