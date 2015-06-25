@@ -1068,9 +1068,9 @@ __kmp_barrier(enum barrier_type bt, int gtid, int is_split, size_t reduce_size,
             }
         } 
 #endif
-        // it is OK to report the barrier state after the barrier begin callback
-        // according to the OMPT specification, a compliant implementation may
-        // even delay reporting this state until the barrier begins to wait
+        // It is OK to report the barrier state after the barrier begin callback.
+        // According to the OMPT specification, a compliant implementation may
+        // even delay reporting this state until the barrier begins to wait.
         this_thr->th.ompt_thread_info.state = ompt_state_wait_barrier;
     }
 #endif
