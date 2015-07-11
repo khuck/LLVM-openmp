@@ -309,7 +309,7 @@ extern "C" {
 #endif
 
 
-OMPT_API_PLACEHOLDER void omp_idle(void)  
+OMPT_API_PLACEHOLDER void ompt_idle(void)  
 {
     // This function is a placeholder used to represent the calling context of
     // idle OpenMP worker threads. It is not meant to be invoked.
@@ -317,7 +317,7 @@ OMPT_API_PLACEHOLDER void omp_idle(void)
 }
 
 
-OMPT_API_PLACEHOLDER void omp_overhead(void)
+OMPT_API_PLACEHOLDER void ompt_overhead(void)
 {
     // This function is a placeholder used to represent the OpenMP context of
     // threads working in the OpenMP runtime.  It is not meant to be invoked.
@@ -325,7 +325,7 @@ OMPT_API_PLACEHOLDER void omp_overhead(void)
 }
 
 
-OMPT_API_PLACEHOLDER void omp_barrier_wait(void)
+OMPT_API_PLACEHOLDER void ompt_barrier_wait(void)
 {
     // This function is a placeholder used to represent the OpenMP context of
     // threads waiting for a barrier in the OpenMP runtime. It is not meant
@@ -334,7 +334,7 @@ OMPT_API_PLACEHOLDER void omp_barrier_wait(void)
 }
 
 
-OMPT_API_PLACEHOLDER void omp_task_wait(void)
+OMPT_API_PLACEHOLDER void ompt_task_wait(void)
 {
     // This function is a placeholder used to represent the OpenMP context of
     // threads waiting for a task in the OpenMP runtime. It is not meant
@@ -343,7 +343,7 @@ OMPT_API_PLACEHOLDER void omp_task_wait(void)
 }
 
 
-OMPT_API_PLACEHOLDER void omp_mutex_wait(void)
+OMPT_API_PLACEHOLDER void ompt_mutex_wait(void)
 {
     // This function is a placeholder used to represent the OpenMP context of
     // threads waiting for a mutex in the OpenMP runtime. It is not meant

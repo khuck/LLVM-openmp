@@ -27,11 +27,11 @@ VERSION {
         #
         # OMPT state placeholders
         #
-        omp_idle;
-        omp_overhead;
-        omp_barrier_wait;
-        omp_task_wait;
-        omp_mutex_wait;
+        ompt_idle;
+        ompt_overhead;
+        ompt_barrier_wait;
+        ompt_task_wait;
+        ompt_mutex_wait;
 
         ompc_*;    # omp.h renames some standard functions to ompc_*.
         kmp_*;     # Intel extensions.
