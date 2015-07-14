@@ -407,7 +407,8 @@ __kmp_GOMP_serialized_parallel(ident_t *loc, kmp_int32 gtid, void (*task)(void *
             int team_size = 1;
             ompt_callbacks.ompt_callback(ompt_event_parallel_begin)(
                 ompt_task_id, ompt_frame, ompt_parallel_id,
-                team_size, (void *) task);
+                team_size, (void *) task,
+                OMPT_RUNTIME_INVOKES_ALL_TASKS(fork_context_gnu));
         }
 
         // set up lightweight task
@@ -536,7 +537,7 @@ xexpand(KMP_API_NAME_GOMP_PARALLEL_END)(void)
         }
 #endif
 
-        __kmp_join_call(&loc, gtid);
+        __kmp_join_call(&loc, gtid, fork_context_gnu );
 
 #if OMPT_SUPPORT
         if (ompt_status & ompt_status_track) {
@@ -557,7 +558,8 @@ xexpand(KMP_API_NAME_GOMP_PARALLEL_END)(void)
                 ompt_callbacks.ompt_callback(ompt_event_parallel_end)) {
                 ompt_task_info_t *task_info = __ompt_get_taskinfo(0);
                 ompt_callbacks.ompt_callback(ompt_event_parallel_end)(
-                    parallel_id, task_info->task_id);
+                    parallel_id, task_info->task_id, 
+                    OMPT_RUNTIME_INVOKES_ALL_TASKS(fork_context_gnu));
             }
 
             ompt_frame->reenter_runtime_frame = NULL;
