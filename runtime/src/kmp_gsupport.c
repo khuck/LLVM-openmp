@@ -854,7 +854,7 @@ LOOP_NEXT_ULL(xexpand(KMP_API_NAME_GOMP_LOOP_ULL_ORDERED_RUNTIME_NEXT), \
 // There are no ull versions (yet).
 //
 
-#define PARALLEL_LOOP_START(func, schedule) \
+#define PARALLEL_LOOP_START(func, schedule, ompt_pre, ompt_post) \
     void func (void (*task) (void *), void *data, unsigned num_threads,      \
       long lb, long ub, long str, long chunk_sz)                             \
     {                                                                        \
@@ -862,6 +862,8 @@ LOOP_NEXT_ULL(xexpand(KMP_API_NAME_GOMP_LOOP_ULL_ORDERED_RUNTIME_NEXT), \
         MKLOC(loc, #func);                                                   \
         KA_TRACE(20, ( #func ": T#%d, lb 0x%lx, ub 0x%lx, str 0x%lx, chunk_sz 0x%lx\n",        \
           gtid, lb, ub, str, chunk_sz ));                                    \
+                                                                             \
+        ompt_pre();                                                          \
                                                                              \
         if (__kmpc_ok_to_fork(&loc) && (num_threads != 1)) {                 \
             if (num_threads != 0) {                                          \
@@ -880,14 +882,45 @@ LOOP_NEXT_ULL(xexpand(KMP_API_NAME_GOMP_LOOP_ULL_ORDERED_RUNTIME_NEXT), \
           (str > 0) ? (ub - 1) : (ub + 1), str, chunk_sz,                    \
           (schedule) != kmp_sch_static);                                     \
                                                                              \
+        ompt_post();                                                         \
+                                                                             \
         KA_TRACE(20, ( #func " exit: T#%d\n", gtid));                        \
     }
 
 
-PARALLEL_LOOP_START(xexpand(KMP_API_NAME_GOMP_PARALLEL_LOOP_STATIC_START), kmp_sch_static)
-PARALLEL_LOOP_START(xexpand(KMP_API_NAME_GOMP_PARALLEL_LOOP_DYNAMIC_START), kmp_sch_dynamic_chunked)
-PARALLEL_LOOP_START(xexpand(KMP_API_NAME_GOMP_PARALLEL_LOOP_GUIDED_START), kmp_sch_guided_chunked)
-PARALLEL_LOOP_START(xexpand(KMP_API_NAME_GOMP_PARALLEL_LOOP_RUNTIME_START), kmp_sch_runtime)
+
+#if OMPT_SUPPORT
+
+#define OMPT_LOOP_PRE() \
+    ompt_frame_t *parent_frame; \
+    if (ompt_status & ompt_status_track) { \
+        parent_frame = __ompt_get_task_frame_internal(0); \
+        parent_frame->reenter_runtime_frame = __builtin_frame_address(0); \
+    }
+
+
+#define OMPT_LOOP_POST() \
+    if (ompt_status & ompt_status_track) { \
+        parent_frame->reenter_runtime_frame = NULL; \
+    }
+
+#else
+
+#define OMPT_LOOP_PRE() 
+
+#define OMPT_LOOP_POST()
+
+#endif
+
+
+PARALLEL_LOOP_START(xexpand(KMP_API_NAME_GOMP_PARALLEL_LOOP_STATIC_START), 
+                    kmp_sch_static, OMPT_LOOP_PRE, OMPT_LOOP_POST)
+PARALLEL_LOOP_START(xexpand(KMP_API_NAME_GOMP_PARALLEL_LOOP_DYNAMIC_START), 
+                    kmp_sch_dynamic_chunked, OMPT_LOOP_PRE, OMPT_LOOP_POST)
+PARALLEL_LOOP_START(xexpand(KMP_API_NAME_GOMP_PARALLEL_LOOP_GUIDED_START), 
+                    kmp_sch_guided_chunked, OMPT_LOOP_PRE, OMPT_LOOP_POST)
+PARALLEL_LOOP_START(xexpand(KMP_API_NAME_GOMP_PARALLEL_LOOP_RUNTIME_START), 
+                    kmp_sch_runtime, OMPT_LOOP_PRE, OMPT_LOOP_POST)
 
 
 //
