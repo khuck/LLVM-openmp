@@ -9,9 +9,7 @@
 #define _OMP_EXTERN extern "C"
 
 #define OMPT_RUNTIME_INVOKES_ALL_TASKS(x) \
-  ((x == fork_context_gnu) ?  \
-   ompt_runtime_invokes_sometimes : \
-   ompt_runtime_invokes_always)
+  ((x == fork_context_gnu) ? ompt_invoker_program : ompt_invoker_runtime)
 
 
 #define ompt_callback(e) e ## _callback
