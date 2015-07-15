@@ -8,7 +8,7 @@
 
 #define _OMP_EXTERN extern "C"
 
-#define OMPT_RUNTIME_INVOKES_ALL_TASKS(x) \
+#define OMPT_INVOKER(x) \
   ((x == fork_context_gnu) ? ompt_invoker_program : ompt_invoker_runtime)
 
 

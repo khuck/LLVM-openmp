@@ -1558,8 +1558,7 @@ __kmp_fork_call(
 
         ompt_callbacks.ompt_callback(ompt_event_parallel_begin)(
             ompt_task_id, ompt_frame, ompt_parallel_id,
-            team_size, unwrapped_task,
-            OMPT_RUNTIME_INVOKES_ALL_TASKS(call_context));
+            team_size, unwrapped_task, OMPT_INVOKER(call_context));
     }
 #endif
 
@@ -1648,7 +1647,7 @@ __kmp_fork_call(
                     ompt_callbacks.ompt_callback(ompt_event_parallel_end)) {
                     ompt_callbacks.ompt_callback(ompt_event_parallel_end)(
                         ompt_parallel_id, ompt_task_id,
-                        OMPT_RUNTIME_INVOKES_ALL_TASKS(call_context));
+                        OMPT_INVOKER(call_context));
                 }
                 master_th->th.ompt_thread_info.state = ompt_state_overhead;
             }
@@ -1824,7 +1823,7 @@ __kmp_fork_call(
                         ompt_callbacks.ompt_callback(ompt_event_parallel_end)) {
                         ompt_callbacks.ompt_callback(ompt_event_parallel_end)(
                             ompt_parallel_id, ompt_task_id,
-                            OMPT_RUNTIME_INVOKES_ALL_TASKS(call_context));
+                            OMPT_INVOKER(call_context));
                     }
                     master_th->th.ompt_thread_info.state = ompt_state_overhead;
                 }
@@ -1931,7 +1930,7 @@ __kmp_fork_call(
                         ompt_callbacks.ompt_callback(ompt_event_parallel_end)) {
                         ompt_callbacks.ompt_callback(ompt_event_parallel_end)(
                             ompt_parallel_id, ompt_task_id,
-                            OMPT_RUNTIME_INVOKES_ALL_TASKS(call_context));
+                            OMPT_INVOKER(call_context));
                     }
                     master_th->th.ompt_thread_info.state = ompt_state_overhead;
                 }
@@ -2265,8 +2264,7 @@ __kmp_join_ompt(
     if (ompt_callbacks.ompt_callback(ompt_event_parallel_end)) {
         ompt_task_info_t *task_info = __ompt_get_taskinfo(0);
         ompt_callbacks.ompt_callback(ompt_event_parallel_end)(
-            parallel_id, task_info->task_id,
-            OMPT_RUNTIME_INVOKES_ALL_TASKS(fork_context));
+            parallel_id, task_info->task_id, OMPT_INVOKER(fork_context));
     }
 
     __kmp_join_restore_state(thread,team);
