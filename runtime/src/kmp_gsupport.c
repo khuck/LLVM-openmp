@@ -537,7 +537,7 @@ xexpand(KMP_API_NAME_GOMP_PARALLEL_END)(void)
         }
 #endif
 
-        __kmp_join_call(&loc, gtid, fork_context_gnu );
+        __kmp_join_call(&loc, gtid, fork_context_gnu);
 
 #if OMPT_SUPPORT
         if (ompt_status & ompt_status_track) {
