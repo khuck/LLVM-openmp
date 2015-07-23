@@ -407,7 +407,8 @@ __kmp_GOMP_serialized_parallel(ident_t *loc, kmp_int32 gtid, void (*task)(void *
             int team_size = 1;
             ompt_callbacks.ompt_callback(ompt_event_parallel_begin)(
                 ompt_task_id, ompt_frame, ompt_parallel_id,
-                team_size, (void *) task, OMPT_INVOKER(fork_context_gnu));
+                team_size, (void *) task,
+                OMPT_INVOKER(fork_context_gnu));
         }
 
         // set up lightweight task
@@ -506,16 +507,16 @@ xexpand(KMP_API_NAME_GOMP_PARALLEL_END)(void)
         ompt_lw_taskteam_t *lwt = __ompt_lw_taskteam_unlink(thr);
         // GOMP allocates/frees lwt since it can't be kept on the stack
         if (lwt) { 
-            __kmp_free(lwt);
+           __kmp_free(lwt);
      
 #if OMPT_SUPPORT
-            if (ompt_status & ompt_status_track) {
-                // Since a lightweight task was destroyed, make sure that the
-                // remaining deepest task knows the stack frame where the runtime 
-                // was reentered.
-                ompt_frame = __ompt_get_task_frame_internal(0);
-                ompt_frame->reenter_runtime_frame = __builtin_frame_address(0);
-            }
+           if (ompt_status & ompt_status_track) {
+              // Since a lightweight task was destroyed, make sure that the
+              // remaining deepest task knows the stack frame where the runtime 
+              // was reentered.
+              ompt_frame = __ompt_get_task_frame_internal(0);
+              ompt_frame->reenter_runtime_frame = __builtin_frame_address(0);
+           }
 #endif
         }
     }
