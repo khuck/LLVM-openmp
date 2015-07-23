@@ -152,10 +152,6 @@ __ompt_init_internal()
             }
             root_thread->th.ompt_thread_info.state = ompt_state_work_serial;
         }
-        
-        // init target stuff
-    root_thread->th.ompt_target_info.target_data_id_stack = NULL;
-        root_thread->th.ompt_target_info.is_target_data = 1;
     }
 }
 
@@ -378,33 +374,27 @@ __ompt_get_runtime_version_internal()
 }
 
 
-ompt_target_id_t __ompt_target_id_new()
+// ---------------------------------------------------------
+// functions for ompt_target_initialize
+// ---------------------------------------------------------
+
+int __ompt_enabled()
 {
-    static uint64_t ompt_target_id = 1;
-    return NEXT_ID(&ompt_target_id, 0);
+    return ompt_status == ompt_status_track_callback;
 }
 
-ompt_data_map_id_t __ompt_data_map_id_new()
-{
-    static uint64_t ompt_data_map_id = 1;
-    return NEXT_ID(&ompt_data_map_id, 0);
-}
+static int ompt_get_callback(ompt_event_t, ompt_callback_t *);
 
-// In order to initialize the OpenMP library from the liboffload
-// we call __kmp_get_global_thread_id_reg(). At the moment this
-// is a workaround which is need get the implicit task ids and
-// force initialization of the OpenMP library.
-// TODO: Really force initialization like that?
-void __ompt_initialize_openmp_runtime() {
-    // FIXME: We better should check if ompt_init() was called before
-    static bool omp_init = false;
-    if (omp_init == false) {
-        __kmp_get_global_thread_id_reg();
-        omp_init = true;
+ompt_callback_t __ompt_get_target_callback(ompt_event_t event)
+{
+    // check for valid range
+    if (event < ompt_event_target_begin ||
+        event > ompt_event_target_invoke_end) {
+        return NULL;
     }
-}
 
-ompt_target_info_t* __ompt_get_target_info() {
-    kmp_info_t  *root_thread = ompt_get_thread();
-    return &(root_thread->th.ompt_target_info);
+    ompt_callback_t callback = NULL;
+    ompt_get_callback(event, &callback);
+
+    return callback;
 }

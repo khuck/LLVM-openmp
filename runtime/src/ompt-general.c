@@ -67,6 +67,7 @@ ompt_callbacks_t ompt_callbacks;
  ****************************************************************************/
 
 static ompt_interface_fn_t ompt_fn_lookup(const char *s);
+OMPT_API_ROUTINE ompt_task_id_t ompt_get_task_id(int depth);
 
 
 /*****************************************************************************
@@ -206,6 +207,25 @@ void ompt_init()
     ompt_initialized = 1;
 }
 
+_OMP_EXTERN void
+ompt_target_initialize(ompt_get_task_id_t *ompt_get_task_id_p,
+                       ompt_enabled_t *ompt_enabled_p,
+                       ompt_get_target_callback_t *ompt_get_target_callback_p)
+{
+    static int ompt_target_init = 0;
+
+    // may only be called once
+    assert(!ompt_target_init);
+    ompt_target_init = 1;
+
+    // initialize the runtime (initial thread and call to ompt_initialize)
+    __kmp_serial_initialize();
+
+    // set pointers
+    *ompt_get_task_id_p = &ompt_get_task_id;
+    *ompt_enabled_p = &__ompt_enabled;
+    *ompt_get_target_callback_p = &__ompt_get_target_callback;
+}
 
 void ompt_fini()
 {

@@ -19,6 +19,10 @@
 #include "offload_common.h"
 #include "coi/coi_client.h"
 
+#if OMPT_SUPPORT
+#include "ompt_target.h"
+#endif
+
 // Address range
 class MemRange {
 public:
@@ -255,6 +259,12 @@ struct Engine {
         return m_process;
     }
 
+#ifdef OMPT_SUPPORT
+    ompt_target_info_t& get_target_info() {
+        return target_info;
+    }
+#endif
+
     // initialize device
     void init(void);
 
@@ -394,7 +404,12 @@ struct Engine {
 private:
     Engine() : m_index(-1), m_physical_index(-1), m_process(0), m_ready(false),
                m_proc_number(0)
-    {}
+    {
+#ifdef OMPT_SUPPORT
+        target_info.target_data_id_stack = NULL;
+        target_info.is_target_data = 1;
+#endif
+    }
 
     ~Engine() {
         if (m_process != 0) {
@@ -477,6 +492,12 @@ private:
     // int -> name mapping for device signals
     static const int   c_signal_max = 32;
     static const char* c_signal_names[c_signal_max];
+
+#ifdef OMPT_SUPPORT
+    // FIXME: use thread local storage
+    // information about the current target
+    ompt_target_info_t target_info;
+#endif
 };
 
 #endif // OFFLOAD_ENGINE_H_INCLUDED

@@ -35,7 +35,6 @@ obj_host_dir=$(build_dir)/obj_host
 obj_target_dir=$(build_dir)/obj_target
 source_dir=$(root_dir)/src
 imported_dir=$(source_dir)/imported
-runtime_dir=../runtime/src
 install_dir?=$(build_dir)
 
 # OS
@@ -74,6 +73,7 @@ myo_dir=$(mpss_dir)/opt/intel/mic/myo
 src_liboffload_common=dv_util.cpp liboffload_error.c liboffload_msg.c offload_common.cpp offload_table.cpp offload_trace.cpp offload_util.cpp
 
 src_liboffload_host=$(src_liboffload_common) cean_util.cpp coi/coi_client.cpp compiler_if_host.cpp offload_engine.cpp offload_env.cpp offload_host.cpp offload_omp_host.cpp offload_timer_host.cpp offload_orsl.cpp orsl-lite/lib/orsl-lite.c offload_myo_host.cpp
+src_liboffload_host+=ompt_target.cpp
 src_liboffload_host:=$(foreach file,$(src_liboffload_host),$(source_dir)/$(file))
 
 src_liboffload_target=$(src_liboffload_common) coi/coi_server.cpp compiler_if_target.cpp offload_omp_target.cpp offload_target.cpp offload_timer_target.cpp offload_myo_target.cpp
@@ -104,7 +104,7 @@ obj_ofld_host=$(foreach file,$(obj_ofld),$(build_host_dir)/$(file))
 obj_ofld_target=$(foreach file,$(obj_ofld),$(build_target_dir)/$(file))
 
 # Options
-opts_common=-O2 -w -fpic -c -DCOI_LIBRARY_VERSION=2 -DMYO_SUPPORT -DOFFLOAD_DEBUG=1 -DSEP_SUPPORT -DTIMING_SUPPORT -I$(coi_include) -I$(myo_dir)/include -I$(source_dir) -I$(runtime_dir) -I$(install_dir)/include
+opts_common=-O2 -w -fpic -c -DCOI_LIBRARY_VERSION=2 -DMYO_SUPPORT -DOFFLOAD_DEBUG=1 -DSEP_SUPPORT -DTIMING_SUPPORT -I$(coi_include) -I$(myo_dir)/include -I$(source_dir) -I$(install_dir)/include
 ifneq ($(omp_header_dir), )
   opts_common+=-I$(imported_dir)
 endif

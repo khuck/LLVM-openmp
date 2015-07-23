@@ -2098,28 +2098,28 @@ bool OffloadDescriptor::offload(
    bool is_target_data_begin = false;
    int tid; 
 
-   __ompt_initialize_openmp_runtime();
+   __ompt_target_initialize();
 
-   ompt_target_info_t* target_info = __ompt_get_target_info();
+   ompt_target_info_t& target_info = m_device.get_target_info();
 
-   if (ompt_status == ompt_status_track_callback) {
+   if (ompt_enabled()) {
      
-     if (ompt_callbacks.ompt_callback(ompt_event_target_begin) && !is_empty ) {
+     if (ompt_get_new_target_callback(ompt_event_target_begin) && !is_empty ) {
        target_id = __ompt_target_id_new();
        device_id = m_device.get_logical_index();
-       task_id = __ompt_get_task_id_internal(0);
-       ompt_callbacks.ompt_callback(ompt_event_target_begin)(task_id,
+       task_id = ompt_get_task_id(0);
+       ompt_get_new_target_callback(ompt_event_target_begin)(task_id,
                                        target_id,
                                        device_id,
                                        0);//m_device.m_funcs[Engine::c_func_compute]); //FIXME 
      }
 
-     if ( (ompt_callbacks.ompt_callback(ompt_event_target_update_begin) ||
-           ompt_callbacks.ompt_callback(ompt_event_target_data_begin) ) &&
+     if ( (ompt_get_new_target_callback(ompt_event_target_update_begin) ||
+           ompt_get_new_target_callback(ompt_event_target_data_begin) ) &&
            is_empty ) {
        target_id = __ompt_target_id_new();
        device_id = m_device.get_logical_index();
-       task_id = __ompt_get_task_id_internal(0);
+       task_id = ompt_get_task_id(0);
 
        // We assume that we have an update region if one of
        // the variables neither is allocated nor freed.
@@ -2131,7 +2131,7 @@ bool OffloadDescriptor::offload(
          if (!vars[i].size && vars[i].flags.is_stack_buf) {
              continue;
          }
-         if(!vars[i].alloc_if && !vars[i].free_if && !(target_info->is_target_data)){
+         if(!vars[i].alloc_if && !vars[i].free_if && !(target_info.is_target_data)){
            is_update = true;
          } else {
            if(vars[i].alloc_if && !vars[i].size)
@@ -2140,12 +2140,12 @@ bool OffloadDescriptor::offload(
        }
 
        // If no variables are handed over, this cannot be an target update
-       if(target_info->is_target_data && vars_total == 0) is_target_data_begin = true;
+       if(target_info.is_target_data && vars_total == 0) is_target_data_begin = true;
 
        if(!is_update){
          if(is_target_data_begin) {
-           if(ompt_callbacks.ompt_callback(ompt_event_target_data_begin)) {
-           ompt_callbacks.ompt_callback(ompt_event_target_data_begin)(task_id,
+           if(ompt_get_new_target_callback(ompt_event_target_data_begin)) {
+           ompt_get_new_target_callback(ompt_event_target_data_begin)(task_id,
                                            target_id,
                                            device_id,
                                            0);//m_device.m_funcs[Engine::c_func_compute]); //FIXME
@@ -2153,12 +2153,12 @@ bool OffloadDescriptor::offload(
            // Store target id for the corresponding target data end event (push to stack)
            ompt_target_data_id_stack_t *item = (ompt_target_data_id_stack_t*) malloc(sizeof(ompt_target_data_id_stack_t));
            item->target_data_id = target_id;
-           item->prev = target_info->target_data_id_stack;
-           target_info->target_data_id_stack = item;
+           item->prev = target_info.target_data_id_stack;
+           target_info.target_data_id_stack = item;
          }
        } else {
-         if(ompt_callbacks.ompt_callback(ompt_event_target_update_begin)) {
-           ompt_callbacks.ompt_callback(ompt_event_target_update_begin)(task_id,
+         if(ompt_get_new_target_callback(ompt_event_target_update_begin)) {
+           ompt_get_new_target_callback(ompt_event_target_update_begin)(task_id,
                                            target_id,
                                            device_id,
                                            0);//m_device.m_funcs[Engine::c_func_compute]); //FIXME
@@ -2264,37 +2264,37 @@ bool OffloadDescriptor::offload(
     cleanup();
 
 #if OMPT_SUPPORT
-   if (ompt_status == ompt_status_track_callback) {
+   if (ompt_enabled()) {
 
      // target end
-     if (ompt_callbacks.ompt_callback(ompt_event_target_end) && !is_empty) {
-       ompt_callbacks.ompt_callback(ompt_event_target_end)(task_id,
+     if (ompt_get_target_callback(ompt_event_target_end) && !is_empty) {
+       ompt_get_target_callback(ompt_event_target_end)(task_id,
                                        target_id);
      }
 
      // Set this thread local variable to 0, because the next call might be a target update
-     target_info->is_target_data = 0;
+     target_info.is_target_data = 0;
 
-     if ( (ompt_callbacks.ompt_callback(ompt_event_target_update_end) ||
-           ompt_callbacks.ompt_callback(ompt_event_target_data_end) ) &&
+     if ( (ompt_get_target_callback(ompt_event_target_update_end) ||
+           ompt_get_target_callback(ompt_event_target_data_end) ) &&
            is_empty ) {
        if(!is_update){
-         if(!is_target_data_begin && target_info->target_data_id_stack != NULL) {
-           if(ompt_callbacks.ompt_callback(ompt_event_target_data_end)) {
-             ompt_callbacks.ompt_callback(ompt_event_target_data_end)(task_id,
-                                           target_info->target_data_id_stack->target_data_id);
+         if(!is_target_data_begin && target_info.target_data_id_stack != NULL) {
+           if(ompt_get_target_callback(ompt_event_target_data_end)) {
+             ompt_get_target_callback(ompt_event_target_data_end)(task_id,
+                                           target_info.target_data_id_stack->target_data_id);
            }
            // target_data_end, pop out of the stack
-           ompt_target_data_id_stack_t *old = target_info->target_data_id_stack;
-           target_info->target_data_id_stack = target_info->target_data_id_stack->prev;
+           ompt_target_data_id_stack_t *old = target_info.target_data_id_stack;
+           target_info.target_data_id_stack = target_info.target_data_id_stack->prev;
            free(old);
 
            // Set to 1 again, because next call can be a target data again
-           target_info->is_target_data = 1;
+           target_info.is_target_data = 1;
          }
        } else {
-         if(ompt_callbacks.ompt_callback(ompt_event_target_update_end)) {
-           ompt_callbacks.ompt_callback(ompt_event_target_update_end)(task_id,
+         if(ompt_get_target_callback(ompt_event_target_update_end)) {
+           ompt_get_target_callback(ompt_event_target_update_end)(task_id,
                                            target_id);
          }
        }
@@ -2553,10 +2553,10 @@ bool OffloadDescriptor::send_pointer_data(bool is_async)
     ompt_task_id_t task_id;
     ompt_target_sync_t sync_type;
 
-    if (ompt_status == ompt_status_track_callback) {
-      if (ompt_callbacks.ompt_callback(ompt_event_data_map_begin)) {
+    if (ompt_enabled()) {
+      if (ompt_get_new_data_map_callback(ompt_event_data_map_begin)) {
         device_id = m_device.get_logical_index();
-        task_id = __ompt_get_task_id_internal(0);
+        task_id = ompt_get_task_id(0);
         if (is_async)
            sync_type = ompt_data_async;
         else
@@ -2578,10 +2578,10 @@ bool OffloadDescriptor::send_pointer_data(bool is_async)
 
                     //TODO: What happens if data transfer fails?
                     #ifdef OMPT_SUPPORT                    
-                    if (ompt_status == ompt_status_track_callback) {
-                      if (ompt_callbacks.ompt_callback(ompt_event_data_map_begin)) {
+                    if (ompt_enabled()) {
+                      if (ompt_get_new_data_map_callback(ompt_event_data_map_begin)) {
                         data_map_id = __ompt_data_map_id_new();
-                        ompt_callbacks.ompt_callback(ompt_event_data_map_begin)(
+                        ompt_get_new_data_map_callback(ompt_event_data_map_begin)(
                                        task_id,
                                        target_id,
                                        data_map_id,
@@ -2656,9 +2656,9 @@ bool OffloadDescriptor::send_pointer_data(bool is_async)
                     ptr_sent += m_vars[i].size;
 
                     #ifdef OMPT_SUPPORT                    
-                    if (ompt_status == ompt_status_track_callback) {
-                      if (ompt_callbacks.ompt_callback(ompt_event_data_map_end)) {
-                        ompt_callbacks.ompt_callback(ompt_event_data_map_end)(
+                    if (ompt_enabled()) {
+                      if (ompt_get_data_map_callback(ompt_event_data_map_end)) {
+                        ompt_get_data_map_callback(ompt_event_data_map_end)(
                                        task_id,
                                        target_id,
                                        data_map_id);
@@ -2677,10 +2677,10 @@ bool OffloadDescriptor::send_pointer_data(bool is_async)
 
                     //TODO: What happens if data transfer fails?
                     #ifdef OMPT_SUPPORT                    
-                    if (ompt_status == ompt_status_track_callback) {
-                      if (ompt_callbacks.ompt_callback(ompt_event_data_map_begin)) {
+                    if (ompt_enabled()) {
+                      if (ompt_get_new_data_map_callback(ompt_event_data_map_begin)) {
                         data_map_id = __ompt_data_map_id_new();
-                        ompt_callbacks.ompt_callback(ompt_event_data_map_begin)(
+                        ompt_get_new_data_map_callback(ompt_event_data_map_begin)(
                                        task_id,
                                        target_id,
                                        data_map_id,
@@ -2754,9 +2754,9 @@ bool OffloadDescriptor::send_pointer_data(bool is_async)
                     ptr_sent += m_vars[i].size;
 
                     #ifdef OMPT_SUPPORT                    
-                    if (ompt_status == ompt_status_track_callback) {
-                      if (ompt_callbacks.ompt_callback(ompt_event_data_map_end)) {
-                        ompt_callbacks.ompt_callback(ompt_event_data_map_end)(
+                    if (ompt_enabled()) {
+                      if (ompt_get_data_map_callback(ompt_event_data_map_end)) {
+                        ompt_get_data_map_callback(ompt_event_data_map_end)(
                                        task_id,
                                        target_id,
                                        data_map_id);
@@ -2774,10 +2774,10 @@ bool OffloadDescriptor::send_pointer_data(bool is_async)
 
                     //TODO: What happens if data transfer fails?
                     #ifdef OMPT_SUPPORT                    
-                    if (ompt_status == ompt_status_track_callback) {
-                      if (ompt_callbacks.ompt_callback(ompt_event_data_map_begin)) {
+                    if (ompt_enabled()) {
+                      if (ompt_get_new_data_map_callback(ompt_event_data_map_begin)) {
                         data_map_id = __ompt_data_map_id_new();
-                        ompt_callbacks.ompt_callback(ompt_event_data_map_begin)(
+                        ompt_get_new_data_map_callback(ompt_event_data_map_begin)(
                                        task_id,
                                        target_id,
                                        data_map_id,
@@ -2848,9 +2848,9 @@ bool OffloadDescriptor::send_pointer_data(bool is_async)
                     ptr_sent += m_vars[i].size;
 
                     #ifdef OMPT_SUPPORT                    
-                    if (ompt_status == ompt_status_track_callback) {
-                      if (ompt_callbacks.ompt_callback(ompt_event_data_map_end)) {
-                        ompt_callbacks.ompt_callback(ompt_event_data_map_end)(
+                    if (ompt_enabled()) {
+                      if (ompt_get_data_map_callback(ompt_event_data_map_end)) {
+                        ompt_get_data_map_callback(ompt_event_data_map_end)(
                                        task_id,
                                        target_id,
                                        data_map_id);
@@ -2868,10 +2868,10 @@ bool OffloadDescriptor::send_pointer_data(bool is_async)
 
                     //TODO: What happens if data transfer fails?
                     #ifdef OMPT_SUPPORT                    
-                    if (ompt_status == ompt_status_track_callback) {
-                      if (ompt_callbacks.ompt_callback(ompt_event_data_map_begin)) {
+                    if (ompt_enabled()) {
+                      if (ompt_get_new_data_map_callback(ompt_event_data_map_begin)) {
                         data_map_id = __ompt_data_map_id_new();
-                        ompt_callbacks.ompt_callback(ompt_event_data_map_begin)(
+                        ompt_get_new_data_map_callback(ompt_event_data_map_begin)(
                                        task_id,
                                        target_id,
                                        data_map_id,
@@ -2947,9 +2947,9 @@ bool OffloadDescriptor::send_pointer_data(bool is_async)
                     ptr_sent += m_vars[i].size;
 
                     #ifdef OMPT_SUPPORT                    
-                    if (ompt_status == ompt_status_track_callback) {
-                      if (ompt_callbacks.ompt_callback(ompt_event_data_map_end)) {
-                        ompt_callbacks.ompt_callback(ompt_event_data_map_end)(
+                    if (ompt_enabled()) {
+                      if (ompt_get_data_map_callback(ompt_event_data_map_end)) {
+                        ompt_get_data_map_callback(ompt_event_data_map_end)(
                                        task_id,
                                        target_id,
                                        data_map_id);
@@ -3155,12 +3155,13 @@ bool OffloadDescriptor::compute()
 #if OMPT_SUPPORT
     ompt_target_device_id_t device_id;
     ompt_task_id_t task_id;
-    if (ompt_status == ompt_status_track_callback) {
+    if (ompt_enabled()) {
      
-        if (ompt_callbacks.ompt_callback(ompt_event_target_invoke_begin) && m_need_runuserfunction) {
+        if (ompt_get_new_target_callback(ompt_event_target_invoke_begin)
+            && m_need_runuserfunction) {
             device_id = m_device.get_logical_index();
-            task_id = __ompt_get_task_id_internal(0);
-            ompt_callbacks.ompt_callback(ompt_event_target_invoke_begin)(task_id,
+            task_id = ompt_get_task_id(0);
+            ompt_get_new_target_callback(ompt_event_target_invoke_begin)(task_id,
                                          target_id,
                                          device_id,
                                          0);//m_device.m_funcs[Engine::c_func_compute]); //FIXME 
@@ -3181,12 +3182,12 @@ bool OffloadDescriptor::compute()
                                &event);
 
 #if OMPT_SUPPORT
-    if (ompt_status == ompt_status_track_callback) {
+    if (ompt_enabled()) {
      
-        if (ompt_callbacks.ompt_callback(ompt_event_target_invoke_end) && m_need_runuserfunction) {
+        if (ompt_get_target_callback(ompt_event_target_invoke_end) && m_need_runuserfunction) {
             device_id = m_device.get_logical_index();
-            task_id = __ompt_get_task_id_internal(0);
-            ompt_callbacks.ompt_callback(ompt_event_target_invoke_end)(task_id, target_id);
+            task_id = ompt_get_task_id(0);
+            ompt_get_target_callback(ompt_event_target_invoke_end)(task_id, target_id);
         }
 
     }
@@ -3351,10 +3352,10 @@ bool OffloadDescriptor::receive_pointer_data(bool is_async)
      ompt_task_id_t task_id;
      ompt_target_sync_t sync_type;
  
-     if (ompt_status == ompt_status_track_callback) {
-      if (ompt_callbacks.ompt_callback(ompt_event_data_map_begin)) {
+     if (ompt_enabled()) {
+      if (ompt_get_new_data_map_callback(ompt_event_data_map_begin)) {
          device_id = m_device.get_logical_index();
-          task_id = __ompt_get_task_id_internal(0);
+          task_id = ompt_get_task_id(0);
          if (is_async)
             sync_type = ompt_data_async;
          else
@@ -3376,10 +3377,10 @@ bool OffloadDescriptor::receive_pointer_data(bool is_async)
 
                     //TODO: What happens if data transfer fails?
                     #ifdef OMPT_SUPPORT                    
-                    if (ompt_status == ompt_status_track_callback) {
-                      if (ompt_callbacks.ompt_callback(ompt_event_data_map_begin)) {
+                    if (ompt_enabled()) {
+                      if (ompt_get_new_data_map_callback(ompt_event_data_map_begin)) {
                         data_map_id = __ompt_data_map_id_new();
-                        ompt_callbacks.ompt_callback(ompt_event_data_map_begin)(
+                        ompt_get_new_data_map_callback(ompt_event_data_map_begin)(
                                        task_id,
                                        target_id,
                                        data_map_id,
@@ -3468,9 +3469,9 @@ bool OffloadDescriptor::receive_pointer_data(bool is_async)
                     ptr_received += m_vars[i].size;
 
                     #ifdef OMPT_SUPPORT                    
-                    if (ompt_status == ompt_status_track_callback) {
-                      if (ompt_callbacks.ompt_callback(ompt_event_data_map_end)) {
-                        ompt_callbacks.ompt_callback(ompt_event_data_map_end)(
+                    if (ompt_enabled()) {
+                      if (ompt_get_data_map_callback(ompt_event_data_map_end)) {
+                        ompt_get_data_map_callback(ompt_event_data_map_end)(
                                        task_id,
                                        target_id,
                                        data_map_id);
@@ -3495,10 +3496,10 @@ bool OffloadDescriptor::receive_pointer_data(bool is_async)
 
                     //TODO: What happens if data transfer fails?
                     #ifdef OMPT_SUPPORT                    
-                    if (ompt_status == ompt_status_track_callback) {
-                      if (ompt_callbacks.ompt_callback(ompt_event_data_map_begin)) {
+                    if (ompt_enabled()) {
+                      if (ompt_get_new_data_map_callback(ompt_event_data_map_begin)) {
                         data_map_id = __ompt_data_map_id_new();
-                        ompt_callbacks.ompt_callback(ompt_event_data_map_begin)(
+                        ompt_get_new_data_map_callback(ompt_event_data_map_begin)(
                                        task_id,
                                        target_id,
                                        data_map_id,
@@ -3615,9 +3616,9 @@ bool OffloadDescriptor::receive_pointer_data(bool is_async)
                     ptr_received += m_vars[i].size;
 
                     #ifdef OMPT_SUPPORT                    
-                    if (ompt_status == ompt_status_track_callback) {
-                      if (ompt_callbacks.ompt_callback(ompt_event_data_map_end)) {
-                        ompt_callbacks.ompt_callback(ompt_event_data_map_end)(
+                    if (ompt_enabled()) {
+                      if (ompt_get_data_map_callback(ompt_event_data_map_end)) {
+                        ompt_get_data_map_callback(ompt_event_data_map_end)(
                                        task_id,
                                        target_id,
                                        data_map_id);

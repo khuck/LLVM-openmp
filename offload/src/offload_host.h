@@ -26,9 +26,8 @@
 #include "coi/coi_client.h"
 
 #if OMPT_SUPPORT
-#include "ompt-target-specific.h"
-#include "ompt-internal.h"
-#endif 
+#include "ompt_target.h"
+#endif
 
 // MIC engines.
 extern Engine*  mic_engines;

@@ -21,13 +21,9 @@ VERSION {
         # "Normal" symbols.
         #
         omp_*;     # Standard OpenMP functions.
-# TODO: Fix this quick hack needed for 4.0 support. Importing all ompt* 
-# symbols is way to much. It would be much better to have a separated
-# interface for liboffload.
-        *ompt_*;
-        __ompt_*;
-#        ompt_initialize;     # OMPT initialization interface
-#        ompt_control;        # OMPT control interface
+        ompt_initialize;            # OMPT initialization interface
+        ompt_target_initialize;     # OMPT target initialization interface
+        ompt_control;               # OMPT control interface
         
         #
         # OMPT state placeholders
