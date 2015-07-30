@@ -20,7 +20,7 @@
 #include "coi/coi_client.h"
 
 #if OMPT_SUPPORT
-#include "ompt_target.h"
+#include "ompt_host.h"
 #endif
 
 // Address range

@@ -1,5 +1,5 @@
 #include "offload_util.h"
-#include "ompt_target.h"
+#include "ompt_host.h"
 
 ompt_get_task_id_t ompt_get_task_id;
 ompt_enabled_t ompt_enabled;
