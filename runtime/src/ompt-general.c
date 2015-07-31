@@ -315,6 +315,27 @@ OMPT_API_ROUTINE void *ompt_get_task_function(int depth)
 }
 
 
+
+/*****************************************************************************
+ * target
+ ****************************************************************************/
+
+OMPT_API_ROUTINE int
+ompt_target_trace_start(int device_id,
+                        ompt_target_buffer_request_callback_t request,
+                        ompt_target_buffer_complete_callback_t complete)
+{
+    assert(0);
+}
+
+
+OMPT_API_ROUTINE int ompt_target_trace_stop(int device_id)
+{
+    assert(0);
+}
+
+
+
 /*****************************************************************************
  * placeholders
  ****************************************************************************/
