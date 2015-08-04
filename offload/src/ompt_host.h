@@ -33,7 +33,9 @@ void __ompt_target_initialize();
 extern "C" {
 #endif
 extern void ompt_target_initialize(ompt_get_task_id_t *, ompt_enabled_t *,
-                                   ompt_get_target_callback_t *);
+                                   ompt_get_target_callback_t *,
+                                   ompt_target_trace_start_t,
+                                   ompt_target_trace_stop_t);
 #ifdef __cplusplus
 };
 #endif
@@ -67,5 +69,14 @@ ompt_get_data_map_callback(ompt_event_t evid)
 ompt_target_id_t __ompt_target_id_new();
 
 ompt_data_map_id_t __ompt_data_map_id_new();
+
+
+// tracing inquiry functions
+int __ompt_target_trace_start(
+        int device_id,
+        ompt_target_buffer_request_callback_t request,
+        ompt_target_buffer_complete_callback_t complete);
+
+int __ompt_target_trace_stop(int device_id);
 
 #endif

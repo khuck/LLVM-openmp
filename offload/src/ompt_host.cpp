@@ -15,7 +15,9 @@ void __ompt_target_initialize()
         ompt_target_initialized = 1;
 
         ompt_target_initialize(&ompt_get_task_id, &ompt_enabled,
-                               &__ompt_get_target_callback);
+                               &__ompt_get_target_callback,
+                               &__ompt_target_trace_start,
+                               &__ompt_target_trace_stop);
     }
 }
 
@@ -39,4 +41,15 @@ ompt_data_map_id_t __ompt_data_map_id_new()
 {
     static uint64_t ompt_data_map_id = 1;
     return increment_id(&ompt_data_map_id);
+}
+
+int __ompt_target_trace_start(
+        int device_id,
+        ompt_target_buffer_request_callback_t request,
+        ompt_target_buffer_complete_callback_t complete) {
+    return 0;
+}
+
+int __ompt_target_trace_stop(int device_id) {
+    return 0;
 }
