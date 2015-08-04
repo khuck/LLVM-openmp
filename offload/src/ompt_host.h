@@ -1,5 +1,5 @@
-#ifndef OMPT_TARGET_H_INCLUDED
-#define OMPT_TARGET_H_INCLUDED
+#ifndef OMPT_HOST_H_INCLUDED
+#define OMPT_HOST_H_INCLUDED
 
 #include "ompt.h"
 
