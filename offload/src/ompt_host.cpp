@@ -29,14 +29,16 @@ static inline uint64_t increment_id(uint64_t *ptr)
 #endif // TARGET_WINNT
 }
 
-ompt_target_id_t __ompt_target_id_new()
+ompt_task_id_t __ompt_target_task_id_new()
 {
-    static uint64_t ompt_target_id = 1;
-    return increment_id(&ompt_target_id);
+    static uint64_t ompt_target_task_id = 1;
+    return increment_id(&ompt_target_task_id);
 }
 
+#if 0
 ompt_data_map_id_t __ompt_data_map_id_new()
 {
     static uint64_t ompt_data_map_id = 1;
     return increment_id(&ompt_data_map_id);
 }
+#endif
