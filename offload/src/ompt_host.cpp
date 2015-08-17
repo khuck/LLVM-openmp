@@ -16,8 +16,8 @@ void __ompt_target_initialize()
 
         ompt_target_initialize(&ompt_get_task_id, &ompt_enabled,
                                &__ompt_get_target_callback,
-                               &__ompt_target_trace_start,
-                               &__ompt_target_trace_stop);
+                               &__ompt_recording_start,
+                               &__ompt_recording_stop);
     }
 }
 
@@ -45,13 +45,13 @@ ompt_data_map_id_t __ompt_data_map_id_new()
 }
 #endif
 
-int __ompt_target_trace_start(
+int __ompt_recording_start(
         int device_id,
         ompt_target_buffer_request_callback_t request,
         ompt_target_buffer_complete_callback_t complete) {
     return 0;
 }
 
-int __ompt_target_trace_stop(int device_id) {
+int __ompt_recording_stop(int device_id) {
     return 0;
 }

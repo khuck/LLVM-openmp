@@ -62,8 +62,8 @@ ompt_callbacks_t ompt_callbacks;
 
 // function pointers for target tracing, these will be overwritten
 // by ompt_target_initialize
-ompt_target_trace_start_t __ompt_target_trace_start;
-ompt_target_trace_stop_t __ompt_target_trace_stop;
+ompt_recording_start_t __ompt_recording_start;
+ompt_recording_stop_t __ompt_recording_stop;
 
 
 /*****************************************************************************
@@ -209,8 +209,8 @@ void ompt_init()
     }
 
     // target tracing function pointers
-    __ompt_target_trace_start = &__ompt_target_trace_start_internal;
-    __ompt_target_trace_stop = &__ompt_target_trace_stop_internal;
+    __ompt_recording_start = &__ompt_recording_start_internal;
+    __ompt_recording_stop = &__ompt_recording_stop_internal;
 
     ompt_initialized = 1;
 }
@@ -219,8 +219,8 @@ _OMP_EXTERN void
 ompt_target_initialize(ompt_get_task_id_t *ompt_get_task_id_p,
                        ompt_enabled_t *ompt_enabled_p,
                        ompt_get_target_callback_t *ompt_get_target_callback_p,
-                       ompt_target_trace_start_t ompt_target_trace_start_p,
-                       ompt_target_trace_stop_t ompt_target_trace_stop_p)
+                       ompt_recording_start_t ompt_recording_start_p,
+                       ompt_recording_stop_t ompt_recording_stop_p)
 {
     static int ompt_target_init = 0;
 
@@ -237,8 +237,8 @@ ompt_target_initialize(ompt_get_task_id_t *ompt_get_task_id_p,
     *ompt_get_target_callback_p = &__ompt_get_target_callback;
 
     // override empty tracing functions
-    __ompt_target_trace_start = ompt_target_trace_start_p;
-    __ompt_target_trace_stop = ompt_target_trace_stop_p;
+    __ompt_recording_start = ompt_recording_start_p;
+    __ompt_recording_stop = ompt_recording_stop_p;
 }
 
 void ompt_fini()
@@ -335,17 +335,17 @@ OMPT_API_ROUTINE void *ompt_get_task_function(int depth)
  ****************************************************************************/
 
 OMPT_API_ROUTINE int
-ompt_target_trace_start(int device_id,
+ompt_recording_start(int device_id,
                         ompt_target_buffer_request_callback_t request,
                         ompt_target_buffer_complete_callback_t complete)
 {
-    return __ompt_target_trace_start(device_id, request, complete);
+    return __ompt_recording_start(device_id, request, complete);
 }
 
 
-OMPT_API_ROUTINE int ompt_target_trace_stop(int device_id)
+OMPT_API_ROUTINE int ompt_recording_stop(int device_id)
 {
-    return __ompt_target_trace_stop(device_id);
+    return __ompt_recording_stop(device_id);
 }
 
 

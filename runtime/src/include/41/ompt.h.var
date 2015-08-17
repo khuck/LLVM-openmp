@@ -32,8 +32,8 @@
     macro (ompt_get_parallel_team_size) \
     macro (ompt_get_task_id)            \
     macro (ompt_get_thread_id)          \
-    macro (ompt_target_trace_start)     \
-    macro (ompt_target_trace_stop)
+    macro (ompt_recording_start)        \
+    macro (ompt_recording_stop)
 
 #define FOREACH_OMPT_PLACEHOLDER_FN(macro)  \
     macro (ompt_idle)                       \
@@ -594,6 +594,9 @@ typedef struct
     ompt_event_t type;                           /* event type */
     uint64_t time;                               /* time, when the record occured */
     ompt_thread_id_t thread_id;                  /* thread identifier for this record */
+    uint64_t correlation_id;                     /* link back to its associated context
+                                                    this can be a target task id,
+                                                    a parent task id or something else */
     union
     {
           ompt_record_thread_t thread;               /* for thread          */
@@ -612,17 +615,17 @@ typedef struct
 /* buffer management routines */
 typedef void (*ompt_target_buffer_request_callback_t) (
     ompt_record_t** buffer,   /* pointer to host memory to store target records */
-    size_t* bytes                   /* buffer size in bytes */
+    size_t* bytes             /* buffer size in bytes */
 );
 
 typedef void (*ompt_target_buffer_complete_callback_t) (
     ompt_record_t* buffer,   /* pointer to buffer with target event records */
-    ompt_target_device_id_t device, /* target device */
-    size_t valid_bytes             /* number of valid bytes in the buffer */
+    int device,              /* target device */
+    size_t valid_bytes       /* number of valid bytes in the buffer */
 );
 
 /* target tracing start / end */
-OMPT_API_FUNCTION(int, ompt_target_trace_start, (
+OMPT_API_FUNCTION(int, ompt_recording_start, (
     int device_id,
     /* pointer to buffer request callback */
     ompt_target_buffer_request_callback_t request,
@@ -630,7 +633,7 @@ OMPT_API_FUNCTION(int, ompt_target_trace_start, (
     ompt_target_buffer_complete_callback_t complete
 ));
 
-OMPT_API_FUNCTION(int, ompt_target_trace_stop, (
+OMPT_API_FUNCTION(int, ompt_recording_stop, (
     int device_id
 ));
 

@@ -405,7 +405,7 @@ ompt_callback_t __ompt_get_target_callback(ompt_event_t event)
 // ---------------------------------------------------------
 
 int
-__ompt_target_trace_start_internal(int device_id,
+__ompt_recording_start_internal(int device_id,
                               ompt_target_buffer_request_callback_t request,
                               ompt_target_buffer_complete_callback_t complete)
 {
@@ -413,7 +413,7 @@ __ompt_target_trace_start_internal(int device_id,
 }
 
 int
-__ompt_target_trace_stop_internal(int device_id)
+__ompt_recording_stop_internal(int device_id)
 {
   return 0;
 }
