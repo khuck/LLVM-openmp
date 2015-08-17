@@ -388,8 +388,8 @@ static int ompt_get_callback(ompt_event_t, ompt_callback_t *);
 ompt_callback_t __ompt_get_target_callback(ompt_event_t event)
 {
     // check for valid range
-    if (event < ompt_event_target_begin ||
-        event > ompt_event_target_invoke_end) {
+    if (event < ompt_event_target_task_begin ||
+        event > ompt_event_target_data_map_done) {
         return NULL;
     }
 

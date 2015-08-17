@@ -141,23 +141,28 @@
 
 #define ompt_event_flush_implemented                    ompt_event_UNIMPLEMENTED
 
+
 /*----------------------------------------------------------------------------
- | Additional (experimental) events for 4.0 support (NOT in technical report yet)
+ | Mandatory Events (target task events)
  +--------------------------------------------------------------------------*/
 
-#define ompt_event_target_begin_implemented           ompt_event_MAY_ALWAYS
-#define ompt_event_target_end_implemented             ompt_event_MAY_ALWAYS
+#define ompt_event_target_task_begin_implemented        ompt_event_MAY_ALWAYS
+#define ompt_event_target_task_end_implemented          ompt_event_MAY_ALWAYS
 
-#define ompt_event_target_data_begin_implemented      ompt_event_MAY_ALWAYS
-#define ompt_event_target_data_end_implemented        ompt_event_MAY_ALWAYS
 
-#define ompt_event_target_update_begin_implemented    ompt_event_MAY_ALWAYS
-#define ompt_event_target_update_end_implemented      ompt_event_MAY_ALWAYS
+/*----------------------------------------------------------------------------
+ | Optional Events (target data, update, map)
+ +--------------------------------------------------------------------------*/
 
-#define ompt_event_data_map_begin_implemented         ompt_event_MAY_ALWAYS
-#define ompt_event_data_map_end_implemented           ompt_event_MAY_ALWAYS
+#define ompt_event_target_data_begin_implemented        ompt_event_MAY_ALWAYS_TRACE
+#define ompt_event_target_data_end_implemented          ompt_event_MAY_ALWAYS_TRACE
 
-#define ompt_event_target_invoke_begin_implemented    ompt_event_MAY_ALWAYS
-#define ompt_event_target_invoke_end_implemented      ompt_event_MAY_ALWAYS
+#define ompt_event_target_update_begin_implemented      ompt_event_MAY_ALWAYS_TRACE
+#define ompt_event_target_update_end_implemented        ompt_event_MAY_ALWAYS_TRACE
+
+#define ompt_event_target_data_map_begin_implemented    ompt_event_MAY_ALWAYS_TRACE
+#define ompt_event_target_data_map_end_implemented      ompt_event_MAY_ALWAYS_TRACE
+#define ompt_event_target_data_map_done_implemented     ompt_event_UNIMPLEMENTED
+
 
 #endif

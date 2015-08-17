@@ -93,14 +93,6 @@ class kmp_stats_list;
 
 #define KMP_HANDLE_SIGNALS (KMP_OS_LINUX || KMP_OS_FREEBSD || KMP_OS_WINDOWS || KMP_OS_DARWIN)
 
-#ifdef KMP_SETVERSION
-/*  from factory/Include, to get VERSION_STRING embedded for 'what'  */
-#include "kaiconfig.h"
-#include "eye.h"
-#include "own.h"
-#include "setversion.h"
-#endif
-
 #include "kmp_wrapper_malloc.h"
 #if KMP_OS_UNIX
 # include <unistd.h>
@@ -3108,7 +3100,7 @@ extern int __kmp_fork_call( ident_t *loc, int gtid, enum fork_context_e fork_con
 #endif
                              );
 
-extern void __kmp_join_call( ident_t *loc, int gtid
+extern void __kmp_join_call( ident_t *loc, int gtid, enum fork_context_e fork_context
 #if OMP_40_ENABLED
                            , int exit_teams = 0
 #endif

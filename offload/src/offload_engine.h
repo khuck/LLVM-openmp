@@ -406,7 +406,6 @@ private:
                m_proc_number(0)
     {
 #ifdef OMPT_SUPPORT
-        target_info.target_data_id_stack = NULL;
         target_info.is_target_data = 1;
 #endif
     }
