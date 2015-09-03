@@ -2282,7 +2282,10 @@ __kmp_join_ompt(
 #endif
 
 void
-__kmp_join_call(ident_t *loc, int gtid, enum fork_context_e fork_context
+__kmp_join_call(ident_t *loc, int gtid
+#if OMPT_SUPPORT
+               , enum fork_context_e fork_context
+#endif
 #if OMP_40_ENABLED
                , int exit_teams
 #endif /* OMP_40_ENABLED */
@@ -5046,7 +5049,6 @@ __kmp_allocate_team( kmp_root_t *root, int new_nproc, int max_nproc,
                 kmp_info_t * new_worker = __kmp_allocate_thread( root, team, f );
                 KMP_DEBUG_ASSERT( new_worker );
                 team->t.t_threads[ f ] = new_worker;
-                new_worker->th.th_team_nproc = team->t.t_nproc;
 
                 KA_TRACE( 20, ("__kmp_allocate_team: team %d init T#%d arrived: join=%u, plain=%u\n",
                                 team->t.t_id, __kmp_gtid_from_tid( f, team ), team->t.t_id, f,
@@ -6984,7 +6986,11 @@ __kmp_teams_master( int gtid )
     
     // AC: last parameter "1" eliminates join barrier which won't work because
     // worker threads are in a fork barrier waiting for more parallel regions
-    __kmp_join_call( loc, gtid, fork_context_intel, 1 ); 
+    __kmp_join_call( loc, gtid
+#if OMPT_SUPPORT
+        , fork_context_intel
+#endif
+        , 1 ); 
 }
 
 int
