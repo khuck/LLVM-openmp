@@ -273,7 +273,7 @@ endif()
 
 # OMPT-support
 # TODO: Make this a real feature check
-set(LIBOMP_OMPT_SUPPORT FALSE CACHE BOOL
+set(LIBOMP_OMPT_SUPPORT TRUE CACHE BOOL
   "OMPT-support?")
 set(LIBOMP_OMPT_BLAME TRUE CACHE BOOL
   "OMPT-blame?")
