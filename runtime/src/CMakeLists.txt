@@ -133,9 +133,16 @@ endif()
 
 # Add the OpenMP library
 libomp_get_ldflags(LIBOMP_CONFIGURED_LDFLAGS)
-add_library(omp SHARED ${LIBOMP_SOURCE_FILES})
+add_library(omp_objlib OBJECT ${LIBOMP_SOURCE_FILES})
+add_library(omp SHARED $<TARGET_OBJECTS:omp_objlib>)
+add_library(omp_static STATIC $<TARGET_OBJECTS:omp_objlib>)
 set_target_properties(omp PROPERTIES
   PREFIX "" SUFFIX "" OUTPUT_NAME "${LIBOMP_LIB_FILE}"
+  LINK_FLAGS "${LIBOMP_CONFIGURED_LDFLAGS}"
+  LINKER_LANGUAGE ${LIBOMP_LINKER_LANGUAGE}
+)
+set_target_properties(omp_static PROPERTIES
+  PREFIX "" SUFFIX "" OUTPUT_NAME "${LIBOMP_LIB_STATIC_FILE}"
   LINK_FLAGS "${LIBOMP_CONFIGURED_LDFLAGS}"
   LINKER_LANGUAGE ${LIBOMP_LINKER_LANGUAGE}
 )
@@ -156,6 +163,12 @@ if(NOT WIN32)
       libgomp${CMAKE_SHARED_LIBRARY_SUFFIX}
     COMMAND ${CMAKE_COMMAND} -E create_symlink ${LIBOMP_LIB_FILE}
       libiomp5${CMAKE_SHARED_LIBRARY_SUFFIX}
+  )
+  add_custom_command(TARGET omp_static POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E create_symlink ${LIBOMP_LIB_STATIC_FILE}
+      libgomp${CMAKE_STATIC_LIBRARY_SUFFIX}
+    COMMAND ${CMAKE_COMMAND} -E create_symlink ${LIBOMP_LIB_STATIC_FILE}
+      libiomp5${CMAKE_STATIC_LIBRARY_SUFFIX}
     WORKING_DIRECTORY ${LIBOMP_LIBRARY_DIR}
   )
 endif()
@@ -288,11 +301,16 @@ if(WIN32)
   endforeach()
 else()
   install(TARGETS omp LIBRARY DESTINATION lib${LIBOMP_LIBDIR_SUFFIX})
+  install(TARGETS omp_static ARCHIVE DESTINATION lib${LIBOMP_LIBDIR_SUFFIX} 
+    LIBRARY DESTINATION lib${LIBOMP_LIBDIR_SUFFIX})
   # Create aliases (symlinks) of the library for backwards compatibility
   set(LIBOMP_ALIASES "libgomp;libiomp5")
   foreach(alias IN LISTS LIBOMP_ALIASES)
     install(CODE "execute_process(COMMAND \"\${CMAKE_COMMAND}\" -E create_symlink \"${LIBOMP_LIB_FILE}\"
       \"${alias}${CMAKE_SHARED_LIBRARY_SUFFIX}\" WORKING_DIRECTORY
+      \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/lib${LIBOMP_LIBDIR_SUFFIX})")
+    install(CODE "execute_process(COMMAND \"\${CMAKE_COMMAND}\" -E create_symlink \"${LIBOMP_LIB_STATIC_FILE}\"
+      \"${alias}${CMAKE_STATIC_LIBRARY_SUFFIX}\" WORKING_DIRECTORY
       \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/lib${LIBOMP_LIBDIR_SUFFIX})")
   endforeach()
 endif()
