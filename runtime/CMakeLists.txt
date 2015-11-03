@@ -186,8 +186,8 @@ elseif("${libomp_build_type_lowercase}" STREQUAL "minsizerel")
   set(MINSIZEREL_BUILD TRUE)
 endif()
 
-# Include itt notify interface? Right now, always.
-set(LIBOMP_USE_ITT_NOTIFY TRUE)
+# Include itt notify interface? Right now, never - it breaks static builds.
+set(LIBOMP_USE_ITT_NOTIFY FALSE)
 
 # normal, profile, stubs library.
 set(NORMAL_LIBRARY FALSE)
