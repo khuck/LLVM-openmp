@@ -148,7 +148,8 @@ set(LIBOMP_FFLAGS "" CACHE STRING
 # Turning this to FALSE aids parallel builds to not interfere with each other.
 # Currently, the testsuite module expects the just built OpenMP library to be located inside the exports/
 # directory.  TODO: have testsuite run under llvm-lit directly.  We can then get rid of copying to exports/
-set(LIBOMP_COPY_EXPORTS TRUE CACHE STRING
+# Setting this to false, so that build without ITT doesnt' fail.
+set(LIBOMP_COPY_EXPORTS FALSE CACHE STRING
   "Should exports be copied into source exports/ directory?")
 
 # HWLOC-support
