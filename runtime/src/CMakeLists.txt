@@ -149,6 +149,11 @@ set_target_properties(omp PROPERTIES
   LINK_FLAGS "${LIBOMP_CONFIGURED_LDFLAGS}"
   LINKER_LANGUAGE ${LIBOMP_LINKER_LANGUAGE}
 )
+set_target_properties(omp_static PROPERTIES
+  PREFIX "" SUFFIX "" OUTPUT_NAME "${LIBOMP_LIB_STATIC_FILE}"
+  LINK_FLAGS "${LIBOMP_CONFIGURED_LDFLAGS}"
+  LINKER_LANGUAGE ${LIBOMP_LINKER_LANGUAGE}
+)
 
 # Get the library's location within the build tree for the unit tester
 if(NOT WIN32)
