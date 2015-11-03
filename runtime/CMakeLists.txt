@@ -209,7 +209,7 @@ elseif("${libomp_build_type_lowercase}" STREQUAL "minsizerel")
 endif()
 
 # Include itt notify interface?
-set(LIBOMP_USE_ITT_NOTIFY TRUE CACHE BOOL
+set(LIBOMP_USE_ITT_NOTIFY FALSE CACHE BOOL
   "Enable ITT notify?")
 
 # normal, profile, stubs library.
