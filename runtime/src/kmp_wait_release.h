@@ -105,6 +105,10 @@ static inline void __kmp_wait_template(kmp_info_t *this_thr, C *flag, int final_
     KA_TRACE(20, ("__kmp_wait_sleep: T#%d waiting for flag(%p)\n", th_gtid, flag));
 
 #if OMPT_SUPPORT && OMPT_BLAME
+    // moved these variables outside the if statement(s), 
+    // so we can reuse them at the end event
+    ompt_parallel_id_t ompt_pId;
+    ompt_task_id_t ompt_tId;
     ompt_state_t ompt_state = this_thr->th.ompt_thread_info.state;
     if (ompt_enabled &&
         ompt_state != ompt_state_undefined) {
@@ -118,16 +122,14 @@ static inline void __kmp_wait_template(kmp_info_t *this_thr, C *flag, int final_
                              ompt_state == ompt_state_wait_barrier_explicit);
 
             ompt_lw_taskteam_t* team = this_thr->th.th_team->t.ompt_serialized_team_info;
-            ompt_parallel_id_t pId;
-            ompt_task_id_t tId;
             if (team){
-                pId = team->ompt_team_info.parallel_id;
-                tId = team->ompt_task_info.task_id;
+                ompt_pId = team->ompt_team_info.parallel_id;
+                ompt_tId = team->ompt_task_info.task_id;
             } else {
-                pId = this_thr->th.th_team->t.ompt_team_info.parallel_id;
-                tId = this_thr->th.th_current_task->ompt_task_info.task_id;
+                ompt_pId = this_thr->th.th_team->t.ompt_team_info.parallel_id;
+                ompt_tId = this_thr->th.th_current_task->ompt_task_info.task_id;
             }
-            ompt_callbacks.ompt_callback(ompt_event_wait_barrier_begin)(pId, tId);
+            ompt_callbacks.ompt_callback(ompt_event_wait_barrier_begin)(ompt_pId, ompt_tId);
         }
     }
 #endif
@@ -257,18 +259,10 @@ static inline void __kmp_wait_template(kmp_info_t *this_thr, C *flag, int final_
             KMP_DEBUG_ASSERT(ompt_state == ompt_state_wait_barrier ||
                              ompt_state == ompt_state_wait_barrier_implicit ||
                              ompt_state == ompt_state_wait_barrier_explicit);
-
-            ompt_lw_taskteam_t* team = this_thr->th.th_team->t.ompt_serialized_team_info;
-            ompt_parallel_id_t pId;
-            ompt_task_id_t tId;
-            if (team){
-                pId = team->ompt_team_info.parallel_id;
-                tId = team->ompt_task_info.task_id;
-            } else {
-                pId = this_thr->th.th_team->t.ompt_team_info.parallel_id;
-                tId = this_thr->th.th_current_task->ompt_task_info.task_id;
-            }
-            ompt_callbacks.ompt_callback(ompt_event_wait_barrier_end)(pId, tId);
+            // reuse the parallel id and task id from the begin event - no need
+            // to look them up again...and more importantly, the parallel region ID
+            // may have changed if this thread is now part of a new team! (i.e. GCC v4.8)
+            ompt_callbacks.ompt_callback(ompt_event_wait_barrier_end)(ompt_pId, ompt_tId);
         }
     }
 #endif
