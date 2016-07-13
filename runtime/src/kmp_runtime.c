@@ -2770,6 +2770,11 @@ __kmp_set_schedule( int gtid, kmp_sched_t kind, int chunk )
         // ignore parameter chunk for schedule auto
         thread->th.th_current_task->td_icvs.sched.chunk = KMP_DEFAULT_CHUNK;
     } else {
+        // for autotuning, we need some way to explicitly specify 
+		// "default", which is defined as -1.
+        if ( chunk < KMP_DEFAULT_CHUNK ) {
+            chunk = KMP_DEFAULT_CHUNK;
+        }
         thread->th.th_current_task->td_icvs.sched.chunk = chunk;
     }
 }
