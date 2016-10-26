@@ -149,11 +149,6 @@ set_target_properties(omp PROPERTIES
   LINK_FLAGS "${LIBOMP_CONFIGURED_LDFLAGS}"
   LINKER_LANGUAGE ${LIBOMP_LINKER_LANGUAGE}
 )
-set_target_properties(omp_static PROPERTIES
-  PREFIX "" SUFFIX "" OUTPUT_NAME "${LIBOMP_LIB_STATIC_FILE}"
-  LINK_FLAGS "${LIBOMP_CONFIGURED_LDFLAGS}"
-  LINKER_LANGUAGE ${LIBOMP_LINKER_LANGUAGE}
-)
 
 # Get the library's location within the build tree for the unit tester
 if(NOT WIN32)
@@ -186,7 +181,6 @@ target_link_libraries(omp ${LIBOMP_CONFIGURED_LIBFLAGS} ${CMAKE_DL_LIBS})
 # Create *.inc before compiling any sources
 # objects depend on : .inc files
 add_custom_target(libomp-needed-headers DEPENDS kmp_i18n_id.inc kmp_i18n_default.inc)
-add_dependencies(omp_objlib libomp-needed-headers)
 
 # Windows specific build rules
 if(WIN32)
@@ -194,7 +188,6 @@ if(WIN32)
 
   # Create .def and .rc file before compiling any sources
   add_custom_target(libomp-needed-windows-files DEPENDS ${LIBOMP_LIB_NAME}.def)
-  add_dependencies(omp_objlib libomp-needed-windows-files)
   # z_Windows_NT-586_asm.asm requires definitions to be sent via command line
   # It only needs the architecutre macro and OMPT_SUPPORT=0|1
   libomp_append(LIBOMP_MASM_DEFINITIONS "-D_M_IA32" IF_TRUE IA32)

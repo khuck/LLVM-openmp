@@ -12,6 +12,11 @@ do_build()
     mkdir ${builddir}
     cd ${builddir}
     cmake -DCMAKE_C_COMPILER=${ccompiler} -DCMAKE_CXX_COMPILER=${cxxcompiler} -DCMAKE_INSTALL_PREFIX=.  ${libomparch} -DCMAKE_BUILD_TYPE=${buildtype} ..
+    make libomp-needed-headers
+    make -j32
+    make install
+    cmake -DCMAKE_C_COMPILER=${ccompiler} -DCMAKE_CXX_COMPILER=${cxxcompiler} -DCMAKE_INSTALL_PREFIX=.  ${libomparch} -DCMAKE_BUILD_TYPE=${buildtype} -DLIBOMP_ENABLE_SHARED=FALSE ..
+    make libomp-needed-headers
     make -j32
     make install
     cd ..
