@@ -1,59 +1,52 @@
 #!/bin/bash -x
 set -e
 
-my_gcc=`which gcc`
-if [ ! "x$my_gcc" = "x" ] ; then
-    rm -rf build-gcc
-    mkdir build-gcc
-    cd build-gcc
-    cmake -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DCMAKE_INSTALL_PREFIX=/usr/local/packages/LLVM-ompt/power8_gcc-4.9.2 -DCMAKE_BUILD_TYPE=Release ..
-    make -j
+do_build()
+{
+    ccompiler=$1
+	cxxcompiler=$2
+	buildtype=$3
+	libomparch=$4
+	builddir=build-${ccompiler}-${buildtype}
+    rm -rf ${builddir}
+    mkdir ${builddir}
+    cd ${builddir}
+    cmake -DCMAKE_C_COMPILER=${ccompiler} -DCMAKE_CXX_COMPILER=${cxxcompiler} -DCMAKE_INSTALL_PREFIX=.  ${libomparch} -DCMAKE_BUILD_TYPE=${buildtype} ..
+    make -j32
     make install
     cd ..
-    rm -rf build-gcc-debug
-    mkdir build-gcc-debug
-    cd build-gcc-debug
-    cmake -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DCMAKE_INSTALL_PREFIX=/usr/local/packages/LLVM-ompt/power8_gcc-4.9.2_debug -DCMAKE_BUILD_TYPE=Debug ..
-    make -j
-    make install
-    cd ..
-fi
+}
 
-my_icc=`which icc`
-if [ ! "x$my_icc" = "x" ] ; then
-    rm -rf build-icpc
-    mkdir build-icpc
-    cd build-icpc
-    cmake -DCMAKE_C_COMPILER=icc -DCMAKE_CXX_COMPILER=icpc -DCMAKE_INSTALL_PREFIX=. -DCMAKE_BUILD_TYPE=Release ..
-    make VERBOSE=1
-    make install
-    cd ..
-
-    rm -rf build-icpc-debug
-    mkdir build-icpc-debug
-    cd build-icpc-debug
-    cmake -DCMAKE_C_COMPILER=icc -DCMAKE_CXX_COMPILER=icpc -DCMAKE_INSTALL_PREFIX=. -DCMAKE_BUILD_TYPE=Debug ..
-    make VERBOSE=1
-    make install
-    cd ..
-
-    machine=`arch`
-	if [[ -d /usr/linux-k1om-* ]] && [[ $machine = x86_64 ]] ; then
-    	rm -rf build-icpc-mic
-    	mkdir build-icpc-mic
-    	cd build-icpc-mic
-    	cmake -DCMAKE_C_COMPILER=icc -DCMAKE_CXX_COMPILER=icpc -DCMAKE_INSTALL_PREFIX=. -DLIBOMP_ARCH=mic -DCMAKE_BUILD_TYPE=Release ..
-    	make VERBOSE=1
-    	make install
-    	cd ..
-
-    	rm -rf build-icpc-mic-debug
-    	mkdir build-icpc-mic-debug
-    	cd build-icpc-mic-debug
-    	cmake -DCMAKE_C_COMPILER=icc -DCMAKE_CXX_COMPILER=icpc -DCMAKE_INSTALL_PREFIX=. -DLIBOMP_ARCH=mic -DCMAKE_BUILD_TYPE=Debug ..
-    	make VERBOSE=1
-    	make install
-    	cd ..
+do_gcc()
+{
+	my_gcc=`which gcc`
+	if [ ! "x$my_gcc" = "x" ] ; then
+		do_build gcc g++ Release ""
+		do_build gcc g++ Debug ""
 	fi
-fi
+}
 
+do_icc()
+{
+	my_icc=`which icc`
+	if [ ! "x$my_icc" = "x" ] ; then
+		do_build icc icpc Release ""
+		do_build icc icpc Debug ""
+	fi
+}
+
+do_mic()
+{
+	my_icc=`which icc`
+	if [ ! "x$my_icc" = "x" ] ; then
+    	machine=`arch`
+		if [ -d /usr/linux-k1om-* ] && [ "$machine" = "x86_64" ] ; then
+			do_build icc icpc Release "-DLIBOMP_ARCH=mic"
+			do_build icc icpc Debug "-DLIBOMP_ARCH=mic"
+		fi
+	fi
+}
+
+do_gcc
+#do_icc
+#do_mic
